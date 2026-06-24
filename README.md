@@ -8,7 +8,7 @@ Hệ thống sử dụng các thuật toán Machine Learning để dự đoán m
 
 ---
 
-## 🎯 Mục tiêu đề tài
+# 🎯 Mục tiêu đề tài
 
 * Hỗ trợ phân loại bệnh nhân theo mức độ ưu tiên.
 * Giảm thời gian chờ khám bệnh.
@@ -18,86 +18,19 @@ Hệ thống sử dụng các thuật toán Machine Learning để dự đoán m
 
 ---
 
-# 🏗️ Sơ đồ kiến trúc hệ thống
+# 🏗️ Sơ đồ kiến trúc tổng thể hệ thống
 
-```text
-                    HỆ THỐNG TRIAGE AI
+📌 **[VẼ SƠ ĐỒ 01 - DRAW.IO]**
 
-┌────────────────────┐
-│      BỆNH NHÂN     │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ NHẬP THÔNG TIN     │
-│ SỨC KHỎE           │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────────────────┐
-│      TIỀN XỬ LÝ DỮ LIỆU        │
-│                                │
-│ • Làm sạch dữ liệu             │
-│ • Xử lý dữ liệu thiếu          │
-│ • Mã hóa dữ liệu               │
-│ • Chuẩn hóa dữ liệu            │
-│ • Chọn đặc trưng               │
-└────────────────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ CHIA TRAIN / TEST  │
-│ 80% / 20%          │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ RANDOM FOREST      │
-│ (MÔ HÌNH CHÍNH)    │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ XGBOOST            │
-│ (MÔ HÌNH SO SÁNH)  │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ ĐÁNH GIÁ MÔ HÌNH   │
-│                    │
-│ • Accuracy         │
-│ • Precision        │
-│ • Recall           │
-│ • F1-score         │
-│ • ROC-AUC          │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ GIẢI THÍCH AI      │
-│                    │
-│ • SHAP             │
-│ • Feature Importance│
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ HIỂN THỊ KẾT QUẢ   │
-└────────────────────┘
-          │
-          ▼
-┌────────────────────┐
-│ NHÂN VIÊN Y TẾ     │
-└────────────────────┘
-```
+**Tên sơ đồ:** Kiến trúc tổng thể hệ thống Triage AI
 
----
+Các khối cần có:
 
-# 🔄 Quy trình hoạt động của hệ thống
+Bệnh nhân
 
-```text
-Dữ liệu bệnh nhân
+↓
+
+Nhập thông tin sức khỏe
 
 ↓
 
@@ -105,15 +38,11 @@ Tiền xử lý dữ liệu
 
 ↓
 
-Chia tập Train/Test
+Mô hình AI
 
 ↓
 
-Huấn luyện mô hình AI
-
-↓
-
-Đánh giá hiệu suất
+Đánh giá mô hình
 
 ↓
 
@@ -121,12 +50,117 @@ Giải thích kết quả AI
 
 ↓
 
-Hiển thị kết quả dự đoán
+Hiển thị kết quả
+
+↓
+
+Nhân viên y tế
+
+**File lưu:**
+
+```text
+images/01_system_architecture.png
 ```
 
 ---
 
-# 🧠 Thuật toán sử dụng
+# 🔄 Luồng hoạt động của hệ thống
+
+📌 **[VẼ SƠ ĐỒ 02 - DRAW.IO]**
+
+**Tên sơ đồ:** Workflow Diagram
+
+```text
+Bệnh nhân
+
+↓
+
+Nhập dữ liệu
+
+↓
+
+Kiểm tra dữ liệu
+
+↓
+
+Tiền xử lý dữ liệu
+
+↓
+
+Phân tích bằng AI
+
+↓
+
+Dự đoán mức độ ưu tiên
+
+↓
+
+Hiển thị kết quả
+
+↓
+
+Bác sĩ tiếp nhận
+```
+
+**File lưu:**
+
+```text
+images/02_workflow.png
+```
+
+---
+
+# 🧠 Quy trình xử lý dữ liệu AI
+
+📌 **[VẼ SƠ ĐỒ 03 - DRAW.IO]**
+
+**Tên sơ đồ:** AI Pipeline
+
+```text
+Raw Data
+
+↓
+
+Data Cleaning
+
+↓
+
+Missing Value Processing
+
+↓
+
+Data Encoding
+
+↓
+
+Data Scaling
+
+↓
+
+Feature Selection
+
+↓
+
+Train/Test Split
+
+↓
+
+AI Model
+
+↓
+
+Prediction
+```
+
+**File lưu:**
+
+```text
+images/03_ai_pipeline.png
+```
+
+---
+
+# 🤖 Thuật toán sử dụng
 
 ## Mô hình chính: Random Forest
 
@@ -173,6 +207,98 @@ random_state = 42
 
 ---
 
+# 🌲 Luồng hoạt động Random Forest
+
+📌 **[VẼ SƠ ĐỒ 04 - DRAW.IO]**
+
+**Tên sơ đồ:** Random Forest Workflow
+
+```text
+Input Data
+
+↓
+
+Bootstrap Sampling
+
+↓
+
+Decision Tree 1
+
+↓
+
+Decision Tree 2
+
+↓
+
+...
+
+↓
+
+Decision Tree N
+
+↓
+
+Majority Voting
+
+↓
+
+Prediction
+```
+
+**File lưu:**
+
+```text
+images/04_random_forest.png
+```
+
+---
+
+# ⚡ Luồng hoạt động XGBoost
+
+📌 **[VẼ SƠ ĐỒ 05 - DRAW.IO]**
+
+**Tên sơ đồ:** XGBoost Workflow
+
+```text
+Input Data
+
+↓
+
+Tree 1
+
+↓
+
+Residual Error
+
+↓
+
+Tree 2
+
+↓
+
+Residual Error
+
+↓
+
+...
+
+↓
+
+Tree N
+
+↓
+
+Final Prediction
+```
+
+**File lưu:**
+
+```text
+images/05_xgboost.png
+```
+
+---
+
 # 📊 Chỉ số đánh giá
 
 Hệ thống sẽ được đánh giá thông qua các chỉ số:
@@ -183,6 +309,28 @@ Hệ thống sẽ được đánh giá thông qua các chỉ số:
 * F1-score
 * ROC-AUC
 * Confusion Matrix
+
+---
+
+# 🩺 Phân loại mức độ ưu tiên khám bệnh
+
+📌 **[VẼ SƠ ĐỒ 06 - DRAW.IO]**
+
+**Tên sơ đồ:** Triage Level
+
+| Cấp độ | Mức độ     | Ý nghĩa          |
+| ------ | ---------- | ---------------- |
+| 1      | Rất cao    | Cần cấp cứu ngay |
+| 2      | Cao        | Nguy cơ cao      |
+| 3      | Trung bình | Cần theo dõi     |
+| 4      | Thấp       | Ít nguy hiểm     |
+| 5      | Rất thấp   | Không khẩn cấp   |
+
+**File lưu:**
+
+```text
+images/06_triage_level.png
+```
 
 ---
 
@@ -202,10 +350,10 @@ Hệ thống sẽ được đánh giá thông qua các chỉ số:
 
 | Họ và tên             | MSSV         | Nhiệm vụ                                     |
 | --------------------- | ------------ | -------------------------------------------- |
-| Đặng Hoàng Ân         | 080.....4982 | Kiến trúc hệ thống, Random Forest, giao diện |
-| Lê Hiền Đức           | 068.....2504 | Dataset và tiền xử lý dữ liệu                |
-| Nguyễn Ngọc Phương    | 075.....8872 | XGBoost và đánh giá mô hình                  |
-| Nguyễn Thị Thảo Trang | 040.....8361 | SHAP, kết luận và tổng hợp báo cáo           |
+| Đặng Hoàng Ân         | 0802....4982 | Kiến trúc hệ thống, Random Forest, giao diện |
+| Lê Hiền Đức           | 0682....2504 | Dataset và tiền xử lý dữ liệu                |
+| Nguyễn Ngọc Phương    | 0753....8872 | XGBoost và đánh giá mô hình                  |
+| Nguyễn Thị Thảo Trang | 0403....8361 | SHAP, kết luận và tổng hợp báo cáo           |
 
 ---
 
@@ -235,4 +383,20 @@ models/
 images/
 
 report/
+```
+
+---
+
+# 📌 DANH SÁCH SƠ ĐỒ CẦN VẼ BẰNG DRAW.IO
+
+| STT | Tên sơ đồ                   | Người phụ trách       |
+| --- | --------------------------- | --------------------- |
+| 01  | Kiến trúc tổng thể hệ thống | Đặng Hoàng Ân         |
+| 02  | Luồng hoạt động hệ thống    | Đặng Hoàng Ân         |
+| 03  | AI Pipeline                 | Đặng Hoàng Ân         |
+| 04  | Random Forest Workflow      | Đặng Hoàng Ân         |
+| 05  | XGBoost Workflow            | Nguyễn Ngọc Phương    |
+| 06  | Triage Level                | Nguyễn Thị Thảo Trang |
+
+```
 ```
