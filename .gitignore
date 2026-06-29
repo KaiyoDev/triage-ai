@@ -103,7 +103,8 @@ ipython_config.py
 
 # Project artifacts
 data/raw/*.csv
-data/processed/
+data/processed/*
+!data/processed/dataset_final.csv
 models/
 report/
 
