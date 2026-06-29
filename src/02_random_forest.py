@@ -17,6 +17,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import label_binarize
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -67,7 +68,7 @@ def evaluate_model(
 
     classes = sorted(y_test.unique())
     if len(classes) > 2:
-        y_bin = label_binarize(y_test, classes=classes)
+        y_bin = label_binarize(y_test, classes=[1, 2, 3, 4, 5])
         roc_auc = roc_auc_score(y_bin, y_proba, multi_class="ovr", average="weighted")
     else:
         roc_auc = roc_auc_score(y_test, y_proba[:, 1])
@@ -89,6 +90,31 @@ def evaluate_model(
     print(confusion_matrix(y_test, y_pred))
 
     return metrics
+
+
+def cross_validate(X: pd.DataFrame, y: pd.Series, cv: int = 3) -> None:
+    """Stratified K-Fold cross-validation."""
+    from sklearn.model_selection import StratifiedKFold
+    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
+    scores = []
+    print(f"\n=== Stratified {cv}-Fold CV ===")
+    for fold, (train_idx, val_idx) in enumerate(skf.split(X, y), 1):
+        X_train_cv, X_val_cv = X.iloc[train_idx], X.iloc[val_idx]
+        y_train_cv, y_val_cv = y.iloc[train_idx], y.iloc[val_idx]
+        model = RandomForestClassifier(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_split=5,
+            min_samples_leaf=2,
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+        )
+        model.fit(X_train_cv, y_train_cv)
+        score = model.score(X_val_cv, y_val_cv)
+        scores.append(score)
+        print(f"Fold {fold}: accuracy = {score:.4f}")
+    print(f"Mean accuracy: {sum(scores)/len(scores):.4f}")
 
 
 def save_artifacts(model: RandomForestClassifier, metrics: dict) -> None:
@@ -123,6 +149,9 @@ def main() -> None:
     X_test = pd.read_csv(X_TEST)
     y_train = pd.read_csv(Y_TRAIN).squeeze()
     y_test = pd.read_csv(Y_TEST).squeeze()
+
+    # Stratified K-Fold on train set
+    cross_validate(X_train, y_train, cv=5)
 
     model = train_random_forest(
         X_train,

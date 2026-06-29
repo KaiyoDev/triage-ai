@@ -1,4 +1,4 @@
-"""Ứng dụng Streamlit 5 trang cho Triage AI."""
+"""Ứng dụng Streamlit 6 trang cho Triage AI."""
 from __future__ import annotations
 
 import sys
@@ -6,6 +6,7 @@ from pathlib import Path
 
 import joblib
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
@@ -16,6 +17,7 @@ st.set_page_config(
     page_title="Triage AI",
     page_icon="🏥",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,53 +26,149 @@ REPORT_DIR = BASE_DIR / "report"
 DATA_DIR = BASE_DIR / "data" / "processed"
 
 FEATURES = [
-    "age", "gender", "heart_rate", "respiratory_rate",
-    "temperature", "spo2", "systolic_bp", "diastolic_bp",
+    "age",
+    "gender",
+    "heart_rate",
+    "respiratory_rate",
+    "temperature",
+    "spo2",
+    "systolic_bp",
+    "diastolic_bp",
+    "pulse_pressure",
+    "shock_index",
+    "map",
+    "tachycardia",
+    "bradycardia",
+    "hypotension",
+    "hypoxia",
+    "fever",
+    "tachypnea",
 ]
 
+# Medical palette
+COLORS = {
+    "primary": "#2563EB",
+    "success": "#22C55E",
+    "warning": "#F59E0B",
+    "danger": "#EF4444",
+    "bg": "#F8FAFC",
+    "text": "#1E293B",
+    "muted": "#64748B",
+    "white": "#FFFFFF",
+}
+
+# Triage level colors (1 = most urgent)
 TRIAGE_COLORS = {
-    1: "#d32f2f",  # red
-    2: "#f57c00",  # orange
-    3: "#fbc02d",  # yellow
-    4: "#388e3c",  # green
-    5: "#1976d2",  # blue
+    1: "#EF4444",  # critical red
+    2: "#F59E0B",  # urgent orange
+    3: "#FBBF24",  # yellow
+    4: "#22C55E",  # green
+    5: "#2563EB",  # blue
+}
+
+TRIAGE_LABELS = {
+    1: "Cấp 1 - Nguy kịch",
+    2: "Cấp 2 - Khẩn cấp",
+    3: "Cấp 3 - Khẩn cấp chậm",
+    4: "Cấp 4 - Không khẩn cấp",
+    5: "Cấp 5 - Không cần khẩn cấp",
 }
 
 
-def local_css():
+# ---------------------------------------------------------------------------
+# CSS
+# ---------------------------------------------------------------------------
+def local_css() -> None:
     st.markdown(
-        """
+        f"""
         <style>
-        .main { background-color: #f8f9fa; }
-        .stButton>button {
-            background-color: #1976d2;
-            color: white;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        .metric-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .main {{
+            background-color: {COLORS["bg"]};
+            color: {COLORS["text"]};
+        }}
+        .block-container {{
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }}
+        h1, h2, h3 {{
+            color: {COLORS["primary"]};
+            font-weight: 700;
+        }}
+        .kpi-card {{
+            background: {COLORS["white"]};
+            border-radius: 16px;
+            padding: 20px 16px;
             text-align: center;
-        }
-        .level-badge {
+            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
+            border-left: 5px solid {COLORS["primary"]};
+            transition: transform 0.2s ease;
+        }}
+        .kpi-card:hover {{
+            transform: translateY(-3px);
+        }}
+        .kpi-value {{
+            font-size: 2rem;
+            font-weight: 800;
+            color: {COLORS["primary"]};
+            margin: 0;
+        }}
+        .kpi-label {{
+            font-size: 0.95rem;
+            color: {COLORS["muted"]};
+            margin-top: 4px;
+        }}
+        .prediction-card {{
+            background: {COLORS["white"]};
+            border-radius: 18px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(30, 41, 59, 0.08);
+        }}
+        .level-badge {{
             display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 22px;
+            border-radius: 30px;
             color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        h1, h2, h3 { color: #1565c0; }
-        .stSidebar .stRadio label { font-size: 1.05rem; }
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin: 12px 0;
+        }}
+        .footer {{
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            text-align: center;
+            color: {COLORS["muted"]};
+            font-size: 0.85rem;
+            border-top: 1px solid #E2E8F0;
+        }}
+        .stButton>button {{
+            background-color: {COLORS["primary"]};
+            color: white;
+            border-radius: 10px;
+            font-weight: 700;
+            height: 48px;
+            border: none;
+        }}
+        .stButton>button:hover {{
+            background-color: #1D4ED8;
+        }}
+        .sidebar-footer {{
+            font-size: 0.8rem;
+            color: {COLORS["muted"]};
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #E2E8F0;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 MODEL_FILE_MAP = {
     "random_forest": "random_forest_model",
     "xgboost": "xgboost_model",
@@ -88,176 +186,345 @@ def load_model(model_name: str):
 
 
 @st.cache_data
-def load_dataset():
+def load_dataset() -> pd.DataFrame | None:
     path = DATA_DIR / "dataset_final.csv"
     if not path.exists():
         return None
     return pd.read_csv(path)
 
 
-def build_input_features(gender: str, vitals: dict) -> pd.DataFrame:
-    gender_map = {"Khác": "gender_Khác", "Nam": "gender_Nam", "Nữ": "gender_Nữ"}
-    onehot = {"gender_Khác": 0, "gender_Nam": 0, "gender_Nữ": 0}
-    onehot[gender_map[gender]] = 1
-    features = [f for f in FEATURES if f != "gender"] + ["gender_Khác", "gender_Nam", "gender_Nữ"]
-    return pd.DataFrame([{f: vitals.get(f, onehot.get(f, 0)) for f in features}])
+@st.cache_resource
+
+def load_scaler():
+    scaler_path = DATA_DIR / "scaler.pkl"
+    if not scaler_path.exists():
+        st.error("Chưa có scaler. Vui lòng chạy preprocessing trước.")
+        st.stop()
+    return joblib.load(scaler_path)
 
 
-# ---------------- Trang 1: Trang chủ ----------------
+def build_input_features(gender: str, vitals: dict, scaler) -> pd.DataFrame:
+    """Build feature DataFrame matching training schema with scaling."""
+    # Feature engineering trước khi scale
+    pulse_pressure = vitals["systolic_bp"] - vitals["diastolic_bp"]
+    shock_index = vitals["heart_rate"] / vitals["systolic_bp"]
+    map_value = (vitals["systolic_bp"] + 2 * vitals["diastolic_bp"]) / 3
+    tachycardia = int(vitals["heart_rate"] > 100)
+    bradycardia = int(vitals["heart_rate"] < 60)
+    hypotension = int(vitals["systolic_bp"] < 90)
+    hypoxia = int(vitals["spo2"] < 90)
+    fever = int(vitals["temperature"] >= 38)
+    tachypnea = int(vitals["respiratory_rate"] > 20)
+
+    # Tạo DataFrame với đúng thứ tự cột scaler
+    row_df = pd.DataFrame([{
+        "age": vitals["age"],
+        "heart_rate": vitals["heart_rate"],
+        "respiratory_rate": vitals["respiratory_rate"],
+        "temperature": vitals["temperature"],
+        "spo2": vitals["spo2"],
+        "systolic_bp": vitals["systolic_bp"],
+        "diastolic_bp": vitals["diastolic_bp"],
+        "pulse_pressure": pulse_pressure,
+        "shock_index": shock_index,
+        "map": map_value,
+        "tachycardia": tachycardia,
+        "bradycardia": bradycardia,
+        "hypotension": hypotension,
+        "hypoxia": hypoxia,
+        "fever": fever,
+        "tachypnea": tachypnea,
+    }])
+    scaled = scaler.transform(row_df)[0]
+
+    row = {
+        "age": scaled[0],
+        "heart_rate": scaled[1],
+        "respiratory_rate": scaled[2],
+        "temperature": scaled[3],
+        "spo2": scaled[4],
+        "systolic_bp": scaled[5],
+        "diastolic_bp": scaled[6],
+        "pulse_pressure": scaled[7],
+        "shock_index": scaled[8],
+        "map": scaled[9],
+        "tachycardia": scaled[10],
+        "bradycardia": scaled[11],
+        "hypotension": scaled[12],
+        "hypoxia": scaled[13],
+        "fever": scaled[14],
+        "tachypnea": scaled[15],
+        "gender_Nam": 1 if gender == "Nam" else 0,
+        "gender_Nữ": 1 if gender == "Nữ" else 0,
+    }
+    return pd.DataFrame([row])
+
+
+def kpi_card(label: str, value: str, accent: str = "primary") -> str:
+    accent_color = COLORS.get(accent, COLORS["primary"])
+    return f"""
+    <div class="kpi-card" style="border-left-color: {accent_color};">
+        <p class="kpi-value" style="color: {accent_color};">{value}</p>
+        <p class="kpi-label">{label}</p>
+    </div>
+    """
+
+
+# ---------------------------------------------------------------------------
+# Pages
+# ---------------------------------------------------------------------------
 def home_page():
-    st.title("🏥 Hệ thống AI hỗ trợ xếp thứ tự khám bệnh")
+    st.markdown("<h1 style='text-align:center;'>🏥 TRIAGE AI</h1>", unsafe_allow_html=True)
     st.markdown(
-        "**Triage AI** phân loại mức độ ưu tiên khám bệnh dựa trên chỉ số sinh tồn, "
-        "sử dụng Random Forest và XGBoost."
+        "<p style='text-align:center; font-size:1.15rem; color:#475569;'>"
+        "Hệ thống AI hỗ trợ phân loại mức độ ưu tiên khám bệnh</p>",
+        unsafe_allow_html=True,
     )
 
-    cols = st.columns(4)
-    metrics = [
-        ("🌲 Random Forest", "Accuracy 91.58%"),
-        ("⚡ XGBoost", "Accuracy 91.84%"),
-        ("📊 Tập train", "1,000,000 mẫu"),
-        ("🧪 Tập test", "199,998 mẫu"),
+    st.markdown("---")
+
+    # KPI grid
+    kpi_data = [
+        ("Accuracy", "91.09%", "success"),
+        ("Precision", "91.07%", "success"),
+        ("Recall", "91.09%", "success"),
+        ("F1-Score", "91.07%", "success"),
+        ("ROC-AUC", "99.26%", "primary"),
+        ("Dataset", "8,361 mẫu", "primary"),
     ]
-    for col, (title, value) in zip(cols, metrics):
-        with col:
-            st.markdown(f"<div class='metric-card'><h4>{title}</h4><h2>{value}</h2></div>", unsafe_allow_html=True)
+
+    for i in range(0, len(kpi_data), 3):
+        cols = st.columns(3)
+        for col, (label, value, accent) in zip(cols, kpi_data[i : i + 3]):
+            col.markdown(kpi_card(label, value, accent), unsafe_allow_html=True)
 
     st.markdown("---")
+
     c1, c2 = st.columns([2, 1])
     with c1:
-        st.subheader("Mục tiêu")
+        st.subheader("Mục tiêu ứng dụng")
         st.markdown(
             """
-            - Giảm thời gian chờ khám bệnh.
-            - Hỗ trợ nhân viên y tế đưa ra quyết định nhanh chóng.
-            - Trực quan hóa và giải thích kết quả dự đoán.
+            - ⚡ Giảm thời gian chờ khám bệnh.
+            - 🤝 Hỗ trợ nhân viên y tế đưa ra quyết định nhanh chóng.
+            - 📊 Trực quan hóa và giải thích kết quả dự đoán.
             """
         )
     with c2:
         st.image("https://img.icons8.com/color/240/hospital.png", width=150)
 
+    st.markdown("---")
     if st.button("🚀 Bắt đầu dự đoán", use_container_width=True):
-        st.session_state.nav = "🩺 Dự đoán bệnh nhân"
+        st.session_state["nav"] = "🩺 Dự đoán bệnh nhân"
         st.rerun()
 
 
-# ---------------- Trang 2: Dự đoán bệnh nhân ----------------
 def predict_page():
     st.title("🩺 Dự đoán mức độ ưu tiên")
 
     rf_model = load_model("random_forest")
     xgb_model = load_model("xgboost")
+    scaler = load_scaler()
 
     with st.form("patient_form"):
         st.subheader("Thông tin bệnh nhân")
         col1, col2 = st.columns(2)
         with col1:
             age = st.slider("Tuổi", 0, 120, 35)
-            gender = st.selectbox("Giới tính", ["Nam", "Nữ", "Khác"])
+            gender = st.selectbox("Giới tính", ["Nam", "Nữ"])
             heart_rate = st.number_input("Nhịp tim (bpm)", 0, 250, 80)
             respiratory_rate = st.number_input("Nhịp thở (lần/phút)", 0, 100, 18)
         with col2:
             temperature = st.number_input("Nhiệt độ (°C)", 30.0, 45.0, 37.0, 0.1)
-            spo2 = st.number_input("Độ bão hòa O₂ (%)", 0, 100, 98)
+            spo2 = st.number_input("Độ bảo hòa O₂ (%)", 0, 100, 98)
             systolic_bp = st.number_input("Huyết áp tâm thu (mmHg)", 0, 300, 120)
             diastolic_bp = st.number_input("Huyết áp tâm trương (mmHg)", 0, 200, 80)
 
         submitted = st.form_submit_button("🔍 DỰ ĐOÁN", use_container_width=True)
 
-    if submitted:
-        vitals = {
-            "age": age, "heart_rate": heart_rate, "respiratory_rate": respiratory_rate,
-            "temperature": temperature, "spo2": spo2,
-            "systolic_bp": systolic_bp, "diastolic_bp": diastolic_bp,
-        }
-        X = build_input_features(gender, vitals)
+    if not submitted:
+        st.info("Nhập thông tin bệnh nhân và nhấn **DỰ ĐOÁN** để xem kết quả.")
+        return
 
-        rf_pred = int(rf_model.predict(X)[0])
-        xgb_pred = int(xgb_model.predict(X)[0])
-        rf_proba = rf_model.predict_proba(X)[0].max()
-        xgb_proba = xgb_model.predict_proba(X)[0].max()
+    vitals = {
+        "age": age,
+        "heart_rate": heart_rate,
+        "respiratory_rate": respiratory_rate,
+        "temperature": temperature,
+        "spo2": spo2,
+        "systolic_bp": systolic_bp,
+        "diastolic_bp": diastolic_bp,
+    }
+    X = build_input_features(gender, vitals, scaler)
 
-        st.markdown("---")
-        st.subheader("Kết quả dự đoán")
+    rf_pred = int(rf_model.predict(X)[0])
+    # XGBoost model was trained on 0-based labels (0->1, 1->2, ...)
+    xgb_raw_pred = int(xgb_model.predict(X)[0])
+    xgb_pred = xgb_raw_pred + 1
 
-        cols = st.columns(3)
-        rf_color = TRIAGE_COLORS.get(rf_pred, "#1976d2")
-        xgb_color = TRIAGE_COLORS.get(xgb_pred, "#1976d2")
-        agree = rf_pred == xgb_pred
+    rf_proba = dict(zip(rf_model.classes_, rf_model.predict_proba(X)[0]))
+    xgb_classes = [int(c) + 1 for c in xgb_model.classes_]
+    xgb_proba = dict(zip(xgb_classes, xgb_model.predict_proba(X)[0]))
 
-        with cols[0]:
-            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-            st.markdown("#### 🌲 Random Forest")
-            st.markdown(f"<span class='level-badge' style='background:{rf_color}'>Cấp {rf_pred}</span>", unsafe_allow_html=True)
-            st.markdown(f"**Xác suất: {rf_proba*100:.0f}%**")
-            st.markdown("</div>", unsafe_allow_html=True)
+    rf_max = rf_proba.get(rf_pred, 0)
+    xgb_max = xgb_proba.get(xgb_pred, 0)
+    agree = rf_pred == xgb_pred
 
-        with cols[1]:
-            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-            st.markdown("#### ⚡ XGBoost")
-            st.markdown(f"<span class='level-badge' style='background:{xgb_color}'>Cấp {xgb_pred}</span>", unsafe_allow_html=True)
-            st.markdown(f"**Xác suất: {xgb_proba*100:.0f}%**")
-            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("Kết quả dự đoán")
 
-        with cols[2]:
-            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-            st.markdown("#### Đồng thuận")
-            if agree:
-                st.markdown("<span class='level-badge' style='background:#388e3c'>✔ Có</span>", unsafe_allow_html=True)
-                st.markdown("Hai mô hình cho cùng kết quả")
-            else:
-                st.markdown("<span class='level-badge' style='background:#d32f2f'>✖ Không</span>", unsafe_allow_html=True)
-                st.markdown("Nên tham khảo ý kiến bác sĩ")
-            st.markdown("</div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(
+            f"""
+            <div class="prediction-card">
+                <h4>🌲 Random Forest</h4>
+                <div class="level-badge" style="background:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])}">
+                    Cấp {rf_pred}
+                </div>
+                <p><strong>{TRIAGE_LABELS.get(rf_pred, '')}</strong></p>
+                <p>Xác suất: <b>{rf_max*100:.1f}%</b></p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.progress(float(rf_max), text="Độ tin cậy RF")
+    with c2:
+        st.markdown(
+            f"""
+            <div class="prediction-card">
+                <h4>⚡ XGBoost</h4>
+                <div class="level-badge" style="background:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])}">
+                    Cấp {xgb_pred}
+                </div>
+                <p><strong>{TRIAGE_LABELS.get(xgb_pred, '')}</strong></p>
+                <p>Xác suất: <b>{xgb_max*100:.1f}%</b></p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.progress(float(xgb_max), text="Độ tin cậy XGB")
+    with c3:
+        consensus_color = COLORS["success"] if agree else COLORS["danger"]
+        consensus_text = "Đồng thuận" if agree else "Không đồng thuận"
+        st.markdown(
+            f"""
+            <div class="prediction-card">
+                <h4>🤝 {consensus_text}</h4>
+                <div class="level-badge" style="background:{consensus_color}">
+                    {'Có' if agree else 'Không'}
+                </div>
+                <p>{'Hai mô hình cho cùng kết quả.' if agree else 'Hai mô hình khác nhau, nên tham khảo ý kiến bác sĩ.'}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+    st.subheader("Phân phối xác suất")
+    levels = [1, 2, 3, 4, 5]
+    proba_df = pd.DataFrame({
+        "Mức độ ưu tiên": [f"Cấp {l}" for l in levels],
+        "Random Forest": [rf_proba.get(l, 0) * 100 for l in levels],
+        "XGBoost": [xgb_proba.get(l, 0) * 100 for l in levels],
+    })
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    x = np.arange(len(levels))
+    width = 0.35
+    ax.bar(x - width / 2, proba_df["Random Forest"], width, label="Random Forest", color=COLORS["primary"], alpha=0.8)
+    ax.bar(x + width / 2, proba_df["XGBoost"], width, label="XGBoost", color=COLORS["success"], alpha=0.8)
+    ax.set_xticks(x)
+    ax.set_xticklabels(proba_df["Mức độ ưu tiên"])
+    ax.set_ylabel("Xác suất (%)")
+    ax.set_title("Xác suất dự đoán theo từng mức độ ưu tiên")
+    ax.legend()
+    ax.set_ylim(0, 100)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    st.pyplot(fig)
+
+    st.markdown("---")
+    st.subheader("Yếu tố ảnh hưởng đến dự đoán")
+    importance_df = pd.DataFrame({
+        "Feature": rf_model.feature_names_in_,
+        "Importance": rf_model.feature_importances_,
+    }).sort_values("Importance", ascending=True)
+
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+    colors = [COLORS["primary"] for _ in importance_df["Importance"]]
+    ax2.barh(importance_df["Feature"], importance_df["Importance"], color=colors, alpha=0.85)
+    ax2.set_xlabel("Tầm quan trọng")
+    ax2.set_title("Feature Importance - Random Forest")
+    for spine in ax2.spines.values():
+        spine.set_visible(False)
+    st.pyplot(fig2)
 
 
-# ---------------- Trang 3: So sánh mô hình ----------------
 def compare_page():
     st.title("📊 So sánh mô hình")
 
     metrics = pd.DataFrame({
         "Metric": ["Accuracy", "Precision", "Recall", "F1", "ROC-AUC"],
-        "Random Forest": [0.9158, 0.9163, 0.9158, 0.9159, 0.9882],
-        "XGBoost": [0.9184, 0.9189, 0.9184, 0.9186, 0.9896],
+        "Random Forest": [0.9133, 0.9147, 0.9133, 0.9135, 0.9923],
+        "XGBoost": [0.9109, 0.9107, 0.9109, 0.9107, 0.9926],
     }).set_index("Metric")
 
     st.dataframe(metrics.style.format("{:.4f}").highlight_max(axis=1, color="#90caf9"), use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-    metrics.plot(kind="bar", ax=ax, color=["#2ecc71", "#3498db"])
+    fig, ax = plt.subplots(figsize=(10, 6))
+    metrics.plot(kind="bar", ax=ax, color=[COLORS["success"], COLORS["primary"]])
     ax.set_ylabel("Score")
     ax.set_title("So sánh hiệu năng Random Forest và XGBoost")
-    ax.set_ylim(0.90, 0.995)
+    ax.set_ylim(0.88, 1.0)
     ax.legend(loc="lower right")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     st.pyplot(fig)
 
 
-# ---------------- Trang 4: Thống kê dữ liệu ----------------
 def data_page():
     st.title("📈 Thống kê dữ liệu")
 
-    df = load_dataset()
-    if df is None:
-        st.warning("Chưa có dữ liệu. Chạy `src/01_preprocessing.py` trước.")
-        return
+    # Load raw augmented data for meaningful clinical stats
+    raw_path = BASE_DIR / "data" / "raw" / "augmented_ktas.csv"
+    if raw_path.exists():
+        df = pd.read_csv(raw_path)
+    else:
+        df = load_dataset()
+        if df is None:
+            st.warning("Chưa có dữ liệu. Chạy preprocessing trước.")
+            return
 
     st.subheader("Tổng quan")
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Tổng số mẫu", f"{len(df):,}")
     c2.metric("Số đặc trưng", len(df.columns) - 1)
     c3.metric("Số mức triage", df["triage_level"].nunique())
+    c4.metric("Mức triage trung bình", f"{df['triage_level'].mean():.2f}")
 
     st.subheader("Phân bố mức độ ưu tiên")
     dist = df["triage_level"].value_counts().sort_index().reset_index()
     dist.columns = ["Mức độ ưu tiên", "Số lượng"]
     fig, ax = plt.subplots(figsize=(10, 5))
-    bars = ax.bar(dist["Mức độ ưu tiên"], dist["Số lượng"], color=[TRIAGE_COLORS[x] for x in dist["Mức độ ưu tiên"]])
+    bars = ax.bar(
+        dist["Mức độ ưu tiên"],
+        dist["Số lượng"],
+        color=[TRIAGE_COLORS[x] for x in dist["Mức độ ưu tiên"]],
+    )
     ax.set_xlabel("Mức độ ưu tiên")
     ax.set_ylabel("Số lượng")
     ax.set_title("Phân bố các mức độ ưu tiên trong dataset")
     for bar in bars:
         height = bar.get_height()
-        ax.annotate(f"{int(height)}", xy=(bar.get_x() + bar.get_width()/2, height), ha="center", va="bottom")
+        ax.annotate(
+            f"{int(height)}",
+            xy=(bar.get_x() + bar.get_width() / 2, height),
+            ha="center",
+            va="bottom",
+        )
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     st.pyplot(fig)
 
     st.subheader("Mô tả thống kê")
@@ -270,7 +537,6 @@ def data_page():
     st.pyplot(fig)
 
 
-# ---------------- Trang 5: Explainable AI ----------------
 def explain_page():
     st.title("🔍 Explainable AI")
     st.markdown("Giải thích đóng góp của các đặc trưng trong dự đoán mô hình.")
@@ -280,13 +546,13 @@ def explain_page():
 
     if summary_path.exists():
         st.subheader("SHAP Summary Plot")
-        st.image(str(summary_path), use_container_width=True)
+        st.image(str(summary_path), width="stretch")
     else:
         st.warning("Chưa có SHAP summary plot. Chạy `src/04_explainable_ai.py`.")
 
     if bar_path.exists():
         st.subheader("SHAP Bar Plot")
-        st.image(str(bar_path), use_container_width=True)
+        st.image(str(bar_path), width="stretch")
     else:
         st.warning("Chưa có SHAP bar plot.")
 
@@ -295,15 +561,17 @@ def explain_page():
     importances = pd.DataFrame({
         "Feature": rf_model.feature_names_in_,
         "Importance": rf_model.feature_importances_,
-    }).sort_values("Importance", ascending=False)
+    }).sort_values("Importance", ascending=True)
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.barplot(data=importances, x="Importance", y="Feature", palette="viridis", ax=ax)
+    ax.barh(importances["Feature"], importances["Importance"], color=COLORS["primary"], alpha=0.85)
     ax.set_title("Feature Importance - Random Forest")
+    ax.set_xlabel("Tầm quan trọng")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     st.pyplot(fig)
 
 
-# ---------------- Trang 6: Giới thiệu nhóm ----------------
 def about_page():
     st.title("ℹ️ Giới thiệu")
 
@@ -330,7 +598,51 @@ def about_page():
     )
 
 
-# ---------------- Main ----------------
+# ---------------------------------------------------------------------------
+# Sidebar & Footer
+# ---------------------------------------------------------------------------
+def render_sidebar() -> str:
+    st.markdown("---")
+    st.markdown(
+        """
+        <div style='text-align:center; margin-bottom:1rem;'>
+            <h4 style='color:#2563EB; margin-bottom:0;'>Triage AI</h4>
+            <p style='color:#64748B; font-size:0.85rem;'>v1.0</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
+    with st.expander("👥 Thông tin nhóm"):
+        st.markdown(
+            """
+            - Đặng Hoàng Ân
+            - Lê Hiền Đức
+            - Nguyễn Ngọc Phương
+            - Nguyễn Thị Thảo Trang
+            """
+        )
+    st.markdown(
+        "<div class='sidebar-footer'>"
+        "Đồ án môn Trí tuệ nhân tạo<br>"
+        "Hỗ trợ xếp thứ tự khám bệnh"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_footer():
+    st.markdown(
+        "<div class='footer'>"
+        "© 2026 Triage AI · Đồ án Trí tuệ nhân tạo · Phiên bản v1.0"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 def main():
     local_css()
 
@@ -345,12 +657,17 @@ def main():
 
     with st.sidebar:
         st.title("Triage AI")
+        render_sidebar()
         st.markdown("---")
         selected = st.radio("Điều hướng", list(pages.keys()))
-        st.markdown("---")
-        st.info("Đồ án môn Trí tuệ nhân tạo - Hỗ trợ xếp thứ tự khám bệnh")
+
+    # Restore navigation from button click
+    if "nav" in st.session_state and st.session_state["nav"] in pages:
+        selected = st.session_state["nav"]
+        st.session_state["nav"] = None
 
     pages[selected]()
+    render_footer()
 
 
 if __name__ == "__main__":

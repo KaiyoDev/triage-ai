@@ -19,6 +19,15 @@ FEATURES = [
     "spo2",
     "systolic_bp",
     "diastolic_bp",
+    "pulse_pressure",
+    "shock_index",
+    "map",
+    "tachycardia",
+    "bradycardia",
+    "hypotension",
+    "hypoxia",
+    "fever",
+    "tachypnea",
 ]
 
 TARGET = "triage_level"
@@ -27,12 +36,13 @@ TARGET = "triage_level"
 TRIAGE_LEVELS = [1, 2, 3, 4, 5]
 
 # Files
-RAW_DATA_FILE = RAW_DIR / "synthetic_medical_triage.csv"
+RAW_DATA_FILE = RAW_DIR / "augmented_ktas.csv"
 FINAL_DATASET = PROCESSED_DIR / "dataset_final.csv"
 X_TRAIN = PROCESSED_DIR / "X_train.csv"
 X_TEST = PROCESSED_DIR / "X_test.csv"
 Y_TRAIN = PROCESSED_DIR / "y_train.csv"
 Y_TEST = PROCESSED_DIR / "y_test.csv"
+SCALER = PROCESSED_DIR / "scaler.pkl"
 
 # Train / test split
 TEST_SIZE = 0.2
