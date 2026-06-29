@@ -20,143 +20,20 @@ Hệ thống sử dụng các thuật toán Machine Learning để dự đoán m
 
 # 🏗️ Sơ đồ kiến trúc tổng thể hệ thống
 
-📌 **[VẼ SƠ ĐỒ 01 - DRAW.IO]**
-
-**Tên sơ đồ:** Kiến trúc tổng thể hệ thống Triage AI
-
-Các khối cần có:
-
-Bệnh nhân
-
-↓
-
-Nhập thông tin sức khỏe
-
-↓
-
-Tiền xử lý dữ liệu
-
-↓
-
-Mô hình AI
-
-↓
-
-Đánh giá mô hình
-
-↓
-
-Giải thích kết quả AI
-
-↓
-
-Hiển thị kết quả
-
-↓
-
-Nhân viên y tế
-
-**File lưu:**
-
-```text
-images/01_system_architecture.png
-```
+![Kiến trúc tổng thể hệ thống Triage AI](images/01_system_architecture.png)
 
 ---
 
 # 🔄 Luồng hoạt động của hệ thống
 
-📌 **[VẼ SƠ ĐỒ 02 - DRAW.IO]**
+![Luồng hoạt động của hệ thống](images/02_workflow.png)
 
-**Tên sơ đồ:** Workflow Diagram
-
-```text
-Bệnh nhân
-
-↓
-
-Nhập dữ liệu
-
-↓
-
-Kiểm tra dữ liệu
-
-↓
-
-Tiền xử lý dữ liệu
-
-↓
-
-Phân tích bằng AI
-
-↓
-
-Dự đoán mức độ ưu tiên
-
-↓
-
-Hiển thị kết quả
-
-↓
-
-Bác sĩ tiếp nhận
-```
-
-**File lưu:**
-
-```text
-images/02_workflow.png
-```
 
 ---
 
 # 🧠 Quy trình xử lý dữ liệu AI
 
-📌 **[VẼ SƠ ĐỒ 03 - DRAW.IO]**
-
-**Tên sơ đồ:** AI Pipeline
-
-```text
-Raw Data
-
-↓
-
-Data Cleaning
-
-↓
-
-Missing Value Processing
-
-↓
-
-Data Encoding
-
-↓
-
-Data Scaling
-
-↓
-
-Feature Selection
-
-↓
-
-Train/Test Split
-
-↓
-
-AI Model
-
-↓
-
-Prediction
-```
-
-**File lưu:**
-
-```text
-images/03_ai_pipeline.png
-```
+![AI Pipeline](images/03_ai_pipeline.png)
 
 ---
 
@@ -209,93 +86,13 @@ random_state = 42
 
 # 🌲 Luồng hoạt động Random Forest
 
-📌 **[VẼ SƠ ĐỒ 04 - DRAW.IO]**
-
-**Tên sơ đồ:** Random Forest Workflow
-
-```text
-Input Data
-
-↓
-
-Bootstrap Sampling
-
-↓
-
-Decision Tree 1
-
-↓
-
-Decision Tree 2
-
-↓
-
-...
-
-↓
-
-Decision Tree N
-
-↓
-
-Majority Voting
-
-↓
-
-Prediction
-```
-
-**File lưu:**
-
-```text
-images/04_random_forest.png
-```
+![Random Forest Workflow](images/04_random_forest.png)
 
 ---
 
 # ⚡ Luồng hoạt động XGBoost
 
-📌 **[VẼ SƠ ĐỒ 05 - DRAW.IO]**
-
-**Tên sơ đồ:** XGBoost Workflow
-
-```text
-Input Data
-
-↓
-
-Tree 1
-
-↓
-
-Residual Error
-
-↓
-
-Tree 2
-
-↓
-
-Residual Error
-
-↓
-
-...
-
-↓
-
-Tree N
-
-↓
-
-Final Prediction
-```
-
-**File lưu:**
-
-```text
-images/05_xgboost.png
-```
+![Luồng hoạt động XGBoost](images/05_xgboost.png)
 
 ---
 
@@ -314,23 +111,8 @@ Hệ thống sẽ được đánh giá thông qua các chỉ số:
 
 # 🩺 Phân loại mức độ ưu tiên khám bệnh
 
-📌 **[VẼ SƠ ĐỒ 06 - DRAW.IO]**
+![Triage Level](images/06_triage_level.png)
 
-**Tên sơ đồ:** Triage Level
-
-| Cấp độ | Mức độ     | Ý nghĩa          |
-| ------ | ---------- | ---------------- |
-| 1      | Rất cao    | Cần cấp cứu ngay |
-| 2      | Cao        | Nguy cơ cao      |
-| 3      | Trung bình | Cần theo dõi     |
-| 4      | Thấp       | Ít nguy hiểm     |
-| 5      | Rất thấp   | Không khẩn cấp   |
-
-**File lưu:**
-
-```text
-images/06_triage_level.png
-```
 
 ---
 
@@ -395,8 +177,8 @@ report/
 | 02  | Luồng hoạt động hệ thống    | Đặng Hoàng Ân         |
 | 03  | AI Pipeline                 | Đặng Hoàng Ân         |
 | 04  | Random Forest Workflow      | Đặng Hoàng Ân         |
-| 05  | XGBoost Workflow            | Nguyễn Ngọc Phương    |
-| 06  | Triage Level                | Nguyễn Thị Thảo Trang |
+| 05  | XGBoost Workflow            | Đặng Hoàng Ân         |
+| 06  | Triage Level                | Đặng Hoàng Ân         |
 
 ```
 ```
