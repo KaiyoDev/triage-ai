@@ -56,8 +56,10 @@ def load_model(m):
     return joblib.load(p)
 @st.cache_data
 def load_dataset():
-    p = DATA_DIR / "dataset_final.csv"
-    return None if not p.exists() else pd.read_csv(p)
+    for p in [MODELS_DIR / "dataset_final.csv", DATA_DIR / "dataset_final.csv"]:
+        if p.exists():
+            return pd.read_csv(p)
+    return None
 def load_scaler():
     # Ưu tiên models/, fallback data/processed/
     for p in [MODELS_DIR / "scaler.pkl", DATA_DIR / "scaler.pkl"]:
