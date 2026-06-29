@@ -71,11 +71,18 @@ def local_css():
     )
 
 
+MODEL_FILE_MAP = {
+    "random_forest": "random_forest_model",
+    "xgboost": "xgboost_model",
+}
+
+
 @st.cache_resource
 def load_model(model_name: str):
-    model_path = MODELS_DIR / f"{model_name}.pkl"
+    file_name = MODEL_FILE_MAP.get(model_name, model_name)
+    model_path = MODELS_DIR / f"{file_name}.pkl"
     if not model_path.exists():
-        st.error(f"Chưa có model {model_name}. Vui lòng chạy training trước.")
+        st.error(f"Chưa có model {file_name}. Vui lòng chạy training trước.")
         st.stop()
     return joblib.load(model_path)
 
