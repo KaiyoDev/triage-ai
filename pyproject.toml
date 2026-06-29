@@ -1,0 +1,29 @@
+[project]
+name = "triage-ai"
+version = "0.1.0"
+description = "AI-powered hospital triage priority classification"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "xgboost>=2.0.0",
+    "shap>=0.45.0",
+    "streamlit>=1.28.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "joblib>=1.3.0",
+    "jupyter>=1.0.0",
+]
+
+[dependency-groups]
+dev = ["ruff", "mypy", "pytest"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
