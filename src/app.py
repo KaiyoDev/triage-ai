@@ -13,6 +13,9 @@ MODELS_DIR = BASE_DIR / "models"
 REPORT_DIR = BASE_DIR / "report"
 DATA_DIR = BASE_DIR / "data" / "processed"
 
+# Deploy fallback: nếu data/processed không có, thử đọc từ raw
+RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+
 C = {"primary":"#1E40AF","primary_light":"#3B82F6","success":"#15803D","warning":"#B45309","danger":"#B91C1C","bg":"#F8FAFC","surface":"#FFFFFF","text":"#0F172A","muted":"#475569","border":"#E2E8F0"}
 TRIAGE_COLORS = {1:"#B91C1C",2:"#B45309",3:"#F59E0B",4:"#15803D",5:"#1E40AF"}
 TRIAGE_LABELS = {1:"Nguy kịch",2:"Khẩn cấp",3:"Khẩn cấp chậm",4:"Không khẩn cấp",5:"Không cần khẩn cấp"}
@@ -56,9 +59,11 @@ def load_dataset():
     p = DATA_DIR / "dataset_final.csv"
     return None if not p.exists() else pd.read_csv(p)
 def load_scaler():
-    p = DATA_DIR / "scaler.pkl"
-    if not p.exists(): st.error("Thiếu scaler"); st.stop()
-    return joblib.load(p)
+    # Ưu tiên models/, fallback data/processed/
+    for p in [MODELS_DIR / "scaler.pkl", DATA_DIR / "scaler.pkl"]:
+        if p.exists():
+            return joblib.load(p)
+    st.error("Thiếu scaler. Chạy pipeline preprocessing trước."); st.stop()
 
 def build_input_features(gender,vitals,scaler):
     pp = vitals["systolic_bp"] - vitals["diastolic_bp"]
@@ -353,11 +358,10 @@ def evaluation_page():
 
 def data_page():
     st.title("Khám phá dữ liệu")
-    rp=BASE_DIR/"data"/"raw"/"augmented_ktas.csv"
-    if rp.exists(): df=pd.read_csv(rp)
-    else:
-        df=load_dataset()
-        if df is None: st.warning("Thiếu dữ liệu"); return
+    df=load_dataset()
+    rp=RAW_DATA_DIR/"augmented_ktas.csv"
+    if df is None and rp.exists(): df=pd.read_csv(rp)
+    if df is None: st.warning("Thiếu dữ liệu. Chạy pipeline preprocessing trước."); return
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Tổng mẫu",f"{len(df):,}"); c2.metric("Đặc trưng số",len(df.select_dtypes(include="number").columns)); c3.metric("Mức triage",df["triage_level"].nunique()); c4.metric("Trung bình",f"{df['triage_level'].mean():.2f}")
