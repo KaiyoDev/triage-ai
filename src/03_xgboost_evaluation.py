@@ -43,25 +43,27 @@ def train_xgboost(
     n_estimators: int = 300,
     max_depth: int = 6,
     learning_rate: float = 0.1,
-) -> "XGBClassifier":
-    """Train XGBoost classifier."""
+) -> tuple["XGBClassifier", dict[int, int]]:
+    """Train XGBoost classifier, remapping labels to 0-based."""
     if not xgboost_available:
         raise ImportError("xgboost chưa được cài đặt. Chạy: pip install xgboost")
 
     print("Đang huấn luyện XGBoost...")
-    # XGBoost yêu cầu nhãn bắt đầu từ 0 nếu là classification
+    unique_labels = sorted(y_train.unique())
+    label_map = {label: idx for idx, label in enumerate(unique_labels)}
+    y_train_mapped = y_train.map(label_map)
+
     model = XGBClassifier(
         n_estimators=n_estimators,
         max_depth=max_depth,
         learning_rate=learning_rate,
         random_state=42,
         n_jobs=-1,
-        use_label_encoder=False,
         eval_metric="mlogloss",
     )
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train_mapped)
     print("Huấn luyện XGBoost hoàn tất.")
-    return model
+    return model, label_map
 
 
 def evaluate_xgboost(
@@ -131,7 +133,7 @@ def main() -> None:
     y_train = pd.read_csv(Y_TRAIN).squeeze()
     y_test = pd.read_csv(Y_TEST).squeeze()
 
-    model = train_xgboost(
+    model, label_map = train_xgboost(
         X_train,
         y_train,
         n_estimators=args.n_estimators,
@@ -139,8 +141,12 @@ def main() -> None:
         learning_rate=args.learning_rate,
     )
 
-    metrics = evaluate_xgboost(model, X_test, y_test)
+    inv_label_map = {v: k for k, v in label_map.items()}
+    y_test_mapped = y_test.map(label_map)
+
+    metrics = evaluate_xgboost(model, X_test, y_test_mapped)
     save_artifacts(model, metrics)
+    print(f"Label map: {label_map}")
 
 
 if __name__ == "__main__":
