@@ -175,7 +175,6 @@ MODEL_FILE_MAP = {
 }
 
 
-@st.cache_resource
 def load_model(model_name: str):
     file_name = MODEL_FILE_MAP.get(model_name, model_name)
     model_path = MODELS_DIR / f"{file_name}.pkl"
