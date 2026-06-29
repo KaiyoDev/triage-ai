@@ -1,0 +1,6 @@
+=== Random Forest Metrics ===
+ACCURACY: 0.9133
+PRECISION: 0.9147
+RECALL: 0.9133
+F1: 0.9135
+ROC_AUC: 0.9923

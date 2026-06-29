@@ -109,8 +109,7 @@ data/processed/*
 !data/processed/X_test.csv
 !data/processed/y_train.csv
 !data/processed/y_test.csv
-models/
-report/
+# model/ và report/ được track (add với git-lfs nếu cần)
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
