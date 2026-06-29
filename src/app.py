@@ -1,7 +1,6 @@
 """Ứng dụng Streamlit 6 trang cho Triage AI."""
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import joblib
@@ -26,44 +25,32 @@ REPORT_DIR = BASE_DIR / "report"
 DATA_DIR = BASE_DIR / "data" / "processed"
 
 FEATURES = [
-    "age",
-    "gender",
-    "heart_rate",
-    "respiratory_rate",
-    "temperature",
-    "spo2",
-    "systolic_bp",
-    "diastolic_bp",
-    "pulse_pressure",
-    "shock_index",
-    "map",
-    "tachycardia",
-    "bradycardia",
-    "hypotension",
-    "hypoxia",
-    "fever",
-    "tachypnea",
+    "age", "gender", "heart_rate", "respiratory_rate", "temperature", "spo2",
+    "systolic_bp", "diastolic_bp", "pulse_pressure", "shock_index", "map",
+    "tachycardia", "bradycardia", "hypotension", "hypoxia", "fever", "tachypnea",
 ]
 
 # Medical palette
 COLORS = {
     "primary": "#2563EB",
+    "primary_dark": "#1E40AF",
     "success": "#22C55E",
     "warning": "#F59E0B",
     "danger": "#EF4444",
     "bg": "#F8FAFC",
+    "surface": "#FFFFFF",
     "text": "#1E293B",
     "muted": "#64748B",
+    "border": "#E2E8F0",
     "white": "#FFFFFF",
 }
 
-# Triage level colors (1 = most urgent)
 TRIAGE_COLORS = {
-    1: "#EF4444",  # critical red
-    2: "#F59E0B",  # urgent orange
-    3: "#FBBF24",  # yellow
-    4: "#22C55E",  # green
-    5: "#2563EB",  # blue
+    1: "#EF4444",
+    2: "#F59E0B",
+    3: "#FBBF24",
+    4: "#22C55E",
+    5: "#2563EB",
 }
 
 TRIAGE_LABELS = {
@@ -75,15 +62,16 @@ TRIAGE_LABELS = {
 }
 
 
-# ---------------------------------------------------------------------------
-# CSS
-# ---------------------------------------------------------------------------
 def local_css() -> None:
     st.markdown(
         f"""
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        html, body, [class*="css"] {{
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }}
         .main {{
-            background-color: {COLORS["bg"]};
+            background: linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
             color: {COLORS["text"]};
         }}
         .block-container {{
@@ -91,46 +79,69 @@ def local_css() -> None:
             padding-bottom: 2rem;
         }}
         h1, h2, h3 {{
-            color: {COLORS["primary"]};
+            color: {COLORS["text"]};
             font-weight: 700;
+            letter-spacing: -0.02em;
+        }}
+        .hero {{
+            background: linear-gradient(135deg, {COLORS["primary"]} 0%, {COLORS["primary_dark"]} 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }}
+        .hero h1 {{
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }}
+        .hero p {{
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin: 0;
         }}
         .kpi-card {{
-            background: {COLORS["white"]};
+            background: {COLORS["surface"]};
             border-radius: 16px;
-            padding: 20px 16px;
-            text-align: center;
+            padding: 1.5rem;
+            text-align: left;
             box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
             border-left: 5px solid {COLORS["primary"]};
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }}
         .kpi-card:hover {{
-            transform: translateY(-3px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.1);
         }}
         .kpi-value {{
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            color: {COLORS["primary"]};
+            color: {COLORS["text"]};
             margin: 0;
         }}
         .kpi-label {{
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: {COLORS["muted"]};
-            margin-top: 4px;
+            margin-top: 0.25rem;
         }}
         .prediction-card {{
-            background: {COLORS["white"]};
-            border-radius: 18px;
-            padding: 24px;
+            background: {COLORS["surface"]};
+            border-radius: 20px;
+            padding: 2rem;
             text-align: center;
-            box-shadow: 0 6px 18px rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.08);
+            border-top: 5px solid {COLORS["primary"]};
         }}
         .level-badge {{
             display: inline-block;
-            padding: 10px 22px;
+            padding: 12px 28px;
             border-radius: 30px;
             color: white;
             font-weight: 800;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             margin: 12px 0;
         }}
         .footer {{
@@ -139,26 +150,45 @@ def local_css() -> None:
             text-align: center;
             color: {COLORS["muted"]};
             font-size: 0.85rem;
-            border-top: 1px solid #E2E8F0;
+            border-top: 1px solid {COLORS["border"]};
         }}
         .stButton>button {{
-            background-color: {COLORS["primary"]};
+            background: linear-gradient(135deg, {COLORS["primary"]} 0%, {COLORS["primary_dark"]} 100%);
             color: white;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 700;
-            height: 48px;
+            height: 52px;
             border: none;
+            font-size: 1rem;
         }}
         .stButton>button:hover {{
-            background-color: #1D4ED8;
+            opacity: 0.9;
         }}
-        .sidebar-footer {{
-            font-size: 0.8rem;
-            color: {COLORS["muted"]};
+        .sidebar-logo {{
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #E2E8F0;
+            padding: 1rem 0;
+        }}
+        .sidebar-logo h3 {{
+            color: {COLORS["primary"]};
+            margin: 0;
+            font-weight: 800;
+        }}
+        .sidebar-logo p {{
+            color: {COLORS["muted"]};
+            font-size: 0.85rem;
+            margin: 0;
+        }}
+        .stForm {{
+            background: {COLORS["surface"]};
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
+        }}
+        .info-card {{
+            background: {COLORS["surface"]};
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
         }}
         </style>
         """,
@@ -166,9 +196,6 @@ def local_css() -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 MODEL_FILE_MAP = {
     "random_forest": "random_forest_model",
     "xgboost": "xgboost_model",
@@ -201,8 +228,6 @@ def load_scaler():
 
 
 def build_input_features(gender: str, vitals: dict, scaler) -> pd.DataFrame:
-    """Build feature DataFrame matching training schema with scaling."""
-    # Feature engineering trước khi scale
     pulse_pressure = vitals["systolic_bp"] - vitals["diastolic_bp"]
     shock_index = vitals["heart_rate"] / vitals["systolic_bp"]
     map_value = (vitals["systolic_bp"] + 2 * vitals["diastolic_bp"]) / 3
@@ -213,48 +238,26 @@ def build_input_features(gender: str, vitals: dict, scaler) -> pd.DataFrame:
     fever = int(vitals["temperature"] >= 38)
     tachypnea = int(vitals["respiratory_rate"] > 20)
 
-    # Tạo DataFrame với đúng thứ tự cột scaler
     row_df = pd.DataFrame([{
-        "age": vitals["age"],
-        "heart_rate": vitals["heart_rate"],
-        "respiratory_rate": vitals["respiratory_rate"],
-        "temperature": vitals["temperature"],
-        "spo2": vitals["spo2"],
-        "systolic_bp": vitals["systolic_bp"],
-        "diastolic_bp": vitals["diastolic_bp"],
-        "pulse_pressure": pulse_pressure,
-        "shock_index": shock_index,
-        "map": map_value,
-        "tachycardia": tachycardia,
-        "bradycardia": bradycardia,
-        "hypotension": hypotension,
-        "hypoxia": hypoxia,
-        "fever": fever,
-        "tachypnea": tachypnea,
+        "age": vitals["age"], "heart_rate": vitals["heart_rate"],
+        "respiratory_rate": vitals["respiratory_rate"], "temperature": vitals["temperature"],
+        "spo2": vitals["spo2"], "systolic_bp": vitals["systolic_bp"],
+        "diastolic_bp": vitals["diastolic_bp"], "pulse_pressure": pulse_pressure,
+        "shock_index": shock_index, "map": map_value, "tachycardia": tachycardia,
+        "bradycardia": bradycardia, "hypotension": hypotension, "hypoxia": hypoxia,
+        "fever": fever, "tachypnea": tachypnea,
     }])
     scaled = scaler.transform(row_df)[0]
 
-    row = {
-        "age": scaled[0],
-        "heart_rate": scaled[1],
-        "respiratory_rate": scaled[2],
-        "temperature": scaled[3],
-        "spo2": scaled[4],
-        "systolic_bp": scaled[5],
-        "diastolic_bp": scaled[6],
-        "pulse_pressure": scaled[7],
-        "shock_index": scaled[8],
-        "map": scaled[9],
-        "tachycardia": scaled[10],
-        "bradycardia": scaled[11],
-        "hypotension": scaled[12],
-        "hypoxia": scaled[13],
-        "fever": scaled[14],
-        "tachypnea": scaled[15],
-        "gender_Nam": 1 if gender == "Nam" else 0,
+    return pd.DataFrame([{
+        "age": scaled[0], "heart_rate": scaled[1], "respiratory_rate": scaled[2],
+        "temperature": scaled[3], "spo2": scaled[4], "systolic_bp": scaled[5],
+        "diastolic_bp": scaled[6], "pulse_pressure": scaled[7], "shock_index": scaled[8],
+        "map": scaled[9], "tachycardia": scaled[10], "bradycardia": scaled[11],
+        "hypotension": scaled[12], "hypoxia": scaled[13], "fever": scaled[14],
+        "tachypnea": scaled[15], "gender_Nam": 1 if gender == "Nam" else 0,
         "gender_Nữ": 1 if gender == "Nữ" else 0,
-    }
-    return pd.DataFrame([row])
+    }])
 
 
 def kpi_card(label: str, value: str, accent: str = "primary") -> str:
@@ -267,20 +270,17 @@ def kpi_card(label: str, value: str, accent: str = "primary") -> str:
     """
 
 
-# ---------------------------------------------------------------------------
-# Pages
-# ---------------------------------------------------------------------------
 def home_page():
-    st.markdown("<h1 style='text-align:center;'>🏥 TRIAGE AI</h1>", unsafe_allow_html=True)
     st.markdown(
-        "<p style='text-align:center; font-size:1.15rem; color:#475569;'>"
-        "Hệ thống AI hỗ trợ phân loại mức độ ưu tiên khám bệnh</p>",
+        """
+        <div class="hero">
+            <h1>🏥 TRIAGE AI</h1>
+            <p>Hệ thống AI hỗ trợ phân loại mức độ ưu tiên khám bệnh</p>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("---")
-
-    # KPI grid
     kpi_data = [
         ("Accuracy", "91.09%", "success"),
         ("Precision", "91.07%", "success"),
@@ -302,13 +302,13 @@ def home_page():
         st.subheader("Mục tiêu ứng dụng")
         st.markdown(
             """
-            - ⚡ Giảm thời gian chờ khám bệnh.
-            - 🤝 Hỗ trợ nhân viên y tế đưa ra quyết định nhanh chóng.
-            - 📊 Trực quan hóa và giải thích kết quả dự đoán.
+            - Giảm thời gian chờ khám bệnh.
+            - Hỗ trợ nhân viên y tế đưa ra quyết định nhanh chóng.
+            - Trực quan hóa và giải thích kết quả dự đoán.
             """
         )
     with c2:
-        st.image("https://img.icons8.com/color/240/hospital.png", width=150)
+        st.image("https://img.icons8.com/color/240/hospital.png", width=160)
 
     st.markdown("---")
     if st.button("🚀 Bắt đầu dự đoán", use_container_width=True):
@@ -344,18 +344,13 @@ def predict_page():
         return
 
     vitals = {
-        "age": age,
-        "heart_rate": heart_rate,
-        "respiratory_rate": respiratory_rate,
-        "temperature": temperature,
-        "spo2": spo2,
-        "systolic_bp": systolic_bp,
+        "age": age, "heart_rate": heart_rate, "respiratory_rate": respiratory_rate,
+        "temperature": temperature, "spo2": spo2, "systolic_bp": systolic_bp,
         "diastolic_bp": diastolic_bp,
     }
     X = build_input_features(gender, vitals, scaler)
 
     rf_pred = int(rf_model.predict(X)[0])
-    # XGBoost model was trained on 0-based labels (0->1, 1->2, ...)
     xgb_raw_pred = int(xgb_model.predict(X)[0])
     xgb_pred = xgb_raw_pred + 1
 
@@ -374,9 +369,9 @@ def predict_page():
     with c1:
         st.markdown(
             f"""
-            <div class="prediction-card">
+            <div class="prediction-card" style="border-top-color:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])};">
                 <h4>🌲 Random Forest</h4>
-                <div class="level-badge" style="background:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])}">
+                <div class="level-badge" style="background:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])};">
                     Cấp {rf_pred}
                 </div>
                 <p><strong>{TRIAGE_LABELS.get(rf_pred, '')}</strong></p>
@@ -389,9 +384,9 @@ def predict_page():
     with c2:
         st.markdown(
             f"""
-            <div class="prediction-card">
+            <div class="prediction-card" style="border-top-color:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])};">
                 <h4>⚡ XGBoost</h4>
-                <div class="level-badge" style="background:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])}">
+                <div class="level-badge" style="background:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])};">
                     Cấp {xgb_pred}
                 </div>
                 <p><strong>{TRIAGE_LABELS.get(xgb_pred, '')}</strong></p>
@@ -406,9 +401,9 @@ def predict_page():
         consensus_text = "Đồng thuận" if agree else "Không đồng thuận"
         st.markdown(
             f"""
-            <div class="prediction-card">
+            <div class="prediction-card" style="border-top-color:{consensus_color};">
                 <h4>🤝 {consensus_text}</h4>
-                <div class="level-badge" style="background:{consensus_color}">
+                <div class="level-badge" style="background:{consensus_color};">
                     {'Có' if agree else 'Không'}
                 </div>
                 <p>{'Hai mô hình cho cùng kết quả.' if agree else 'Hai mô hình khác nhau, nên tham khảo ý kiến bác sĩ.'}</p>
@@ -449,8 +444,7 @@ def predict_page():
     }).sort_values("Importance", ascending=True)
 
     fig2, ax2 = plt.subplots(figsize=(10, 5))
-    colors = [COLORS["primary"] for _ in importance_df["Importance"]]
-    ax2.barh(importance_df["Feature"], importance_df["Importance"], color=colors, alpha=0.85)
+    ax2.barh(importance_df["Feature"], importance_df["Importance"], color=COLORS["primary"], alpha=0.85)
     ax2.set_xlabel("Tầm quan trọng")
     ax2.set_title("Feature Importance - Random Forest")
     for spine in ax2.spines.values():
@@ -483,7 +477,6 @@ def compare_page():
 def data_page():
     st.title("📈 Thống kê dữ liệu")
 
-    # Load raw augmented data for meaningful clinical stats
     raw_path = BASE_DIR / "data" / "raw" / "augmented_ktas.csv"
     if raw_path.exists():
         df = pd.read_csv(raw_path)
@@ -595,16 +588,13 @@ def about_page():
     )
 
 
-# ---------------------------------------------------------------------------
-# Sidebar & Footer
-# ---------------------------------------------------------------------------
-def render_sidebar() -> str:
+def render_sidebar():
     st.markdown("---")
     st.markdown(
         """
-        <div style='text-align:center; margin-bottom:1rem;'>
-            <h4 style='color:#2563EB; margin-bottom:0;'>Triage AI</h4>
-            <p style='color:#64748B; font-size:0.85rem;'>v1.0</p>
+        <div class="sidebar-logo">
+            <h3>🏥 Triage AI</h3>
+            <p>v1.0 · Đồ án AI</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -621,8 +611,8 @@ def render_sidebar() -> str:
         )
     st.markdown(
         "<div class='sidebar-footer'>"
-        "Đồ án môn Trí tuệ nhân tạo<br>"
-        "Hỗ trợ xếp thứ tự khám bệnh"
+        "Hệ thống hỗ trợ xếp thứ tự khám bệnh<br>"
+        "© 2026 Triage AI"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -637,9 +627,6 @@ def render_footer():
     )
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 def main():
     local_css()
 
@@ -658,7 +645,6 @@ def main():
         st.markdown("---")
         selected = st.radio("Điều hướng", list(pages.keys()))
 
-    # Restore navigation from button click
     if "nav" in st.session_state and st.session_state["nav"] in pages:
         selected = st.session_state["nav"]
         st.session_state["nav"] = None
