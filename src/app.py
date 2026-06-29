@@ -193,8 +193,6 @@ def load_dataset() -> pd.DataFrame | None:
     return pd.read_csv(path)
 
 
-@st.cache_resource
-
 def load_scaler():
     scaler_path = DATA_DIR / "scaler.pkl"
     if not scaler_path.exists():
