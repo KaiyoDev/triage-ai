@@ -47,6 +47,7 @@ def train_random_forest(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
+        class_weight="balanced",
         random_state=42,
         n_jobs=-1,
     )
