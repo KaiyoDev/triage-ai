@@ -105,6 +105,10 @@ ipython_config.py
 data/raw/*.csv
 data/processed/*
 !data/processed/dataset_final.csv
+!data/processed/X_train.csv
+!data/processed/X_test.csv
+!data/processed/y_train.csv
+!data/processed/y_test.csv
 models/
 report/
 
