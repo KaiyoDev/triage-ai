@@ -213,6 +213,13 @@ def export_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
         X, y, test_size=TEST_SIZE, random_state=42, stratify=y
     )
 
+    # Áp dụng SMOTE để cân bằng tập train
+    print("Áp dụng SMOTE cho tập train...")
+    from imblearn.over_sampling import SMOTE
+    smote = SMOTE(random_state=42, k_neighbors=3)
+    X_train, y_train = smote.fit_resample(X_train, y_train)
+    print(f"  Kích thước tập train sau SMOTE: {X_train.shape}")
+
     ensure_dir(X_TRAIN.parent)
     FINAL_DATASET.parent.mkdir(parents=True, exist_ok=True)
 
