@@ -104,12 +104,6 @@ ipython_config.py
 # Project artifacts
 data/raw/*.csv
 data/processed/*
-!data/processed/dataset_final.csv
-!data/processed/X_train.csv
-!data/processed/X_test.csv
-!data/processed/y_train.csv
-!data/processed/y_test.csv
-# model/ và report/ được track (add với git-lfs nếu cần)
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
