@@ -25,40 +25,54 @@ REPORT_DIR = BASE_DIR / "report"
 DATA_DIR = BASE_DIR / "data" / "processed"
 
 FEATURES = [
-    "age", "gender", "heart_rate", "respiratory_rate", "temperature", "spo2",
-    "systolic_bp", "diastolic_bp", "pulse_pressure", "shock_index", "map",
-    "tachycardia", "bradycardia", "hypotension", "hypoxia", "fever", "tachypnea",
+    "age",
+    "gender",
+    "heart_rate",
+    "respiratory_rate",
+    "temperature",
+    "spo2",
+    "systolic_bp",
+    "diastolic_bp",
+    "pulse_pressure",
+    "shock_index",
+    "map",
+    "tachycardia",
+    "bradycardia",
+    "hypotension",
+    "hypoxia",
+    "fever",
+    "tachypnea",
 ]
 
-# Medical palette
+# Clinical palette: muted, trust-first
 COLORS = {
-    "primary": "#2563EB",
-    "primary_dark": "#1E40AF",
-    "success": "#22C55E",
-    "warning": "#F59E0B",
-    "danger": "#EF4444",
+    "primary": "#1E40AF",
+    "primary_light": "#3B82F6",
+    "success": "#15803D",
+    "warning": "#B45309",
+    "danger": "#B91C1C",
     "bg": "#F8FAFC",
     "surface": "#FFFFFF",
-    "text": "#1E293B",
-    "muted": "#64748B",
+    "text": "#0F172A",
+    "muted": "#475569",
     "border": "#E2E8F0",
     "white": "#FFFFFF",
 }
 
 TRIAGE_COLORS = {
-    1: "#EF4444",
-    2: "#F59E0B",
-    3: "#FBBF24",
-    4: "#22C55E",
-    5: "#2563EB",
+    1: "#B91C1C",
+    2: "#B45309",
+    3: "#F59E0B",
+    4: "#15803D",
+    5: "#1E40AF",
 }
 
 TRIAGE_LABELS = {
-    1: "Cấp 1 - Nguy kịch",
-    2: "Cấp 2 - Khẩn cấp",
-    3: "Cấp 3 - Khẩn cấp chậm",
-    4: "Cấp 4 - Không khẩn cấp",
-    5: "Cấp 5 - Không cần khẩn cấp",
+    1: "Nguy kịch",
+    2: "Khẩn cấp",
+    3: "Khẩn cấp chậm",
+    4: "Không khẩn cấp",
+    5: "Không cần khẩn cấp",
 }
 
 
@@ -66,129 +80,117 @@ def local_css() -> None:
     st.markdown(
         f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] {{
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: {COLORS["text"]};
         }}
         .main {{
-            background: linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
-            color: {COLORS["text"]};
+            background-color: {COLORS["bg"]};
         }}
         .block-container {{
             padding-top: 2rem;
             padding-bottom: 2rem;
+            max-width: 1200px;
         }}
         h1, h2, h3 {{
             color: {COLORS["text"]};
             font-weight: 700;
-            letter-spacing: -0.02em;
         }}
         .hero {{
-            background: linear-gradient(135deg, {COLORS["primary"]} 0%, {COLORS["primary_dark"]} 100%);
-            color: white;
+            background: {COLORS["surface"]};
+            border: 1px solid {COLORS["border"]};
+            border-radius: 12px;
             padding: 2.5rem 2rem;
-            border-radius: 20px;
-            text-align: center;
+            text-align: left;
             margin-bottom: 1.5rem;
-            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
         }}
         .hero h1 {{
-            color: white;
-            font-size: 2.5rem;
+            color: {COLORS["text"]};
+            font-size: 2rem;
             font-weight: 800;
             margin-bottom: 0.5rem;
         }}
         .hero p {{
-            color: rgba(255,255,255,0.9);
-            font-size: 1.1rem;
+            color: {COLORS["muted"]};
+            font-size: 1.05rem;
             margin: 0;
+            max-width: 65ch;
         }}
         .kpi-card {{
             background: {COLORS["surface"]};
-            border-radius: 16px;
-            padding: 1.5rem;
+            border: 1px solid {COLORS["border"]};
+            border-radius: 10px;
+            padding: 1.25rem;
             text-align: left;
-            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
-            border-left: 5px solid {COLORS["primary"]};
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }}
-        .kpi-card:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.1);
         }}
         .kpi-value {{
-            font-size: 1.75rem;
-            font-weight: 800;
+            font-size: 1.5rem;
+            font-weight: 700;
             color: {COLORS["text"]};
             margin: 0;
         }}
         .kpi-label {{
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: {COLORS["muted"]};
             margin-top: 0.25rem;
         }}
         .prediction-card {{
             background: {COLORS["surface"]};
-            border-radius: 20px;
-            padding: 2rem;
+            border: 1px solid {COLORS["border"]};
+            border-top: 4px solid {COLORS["primary"]};
+            border-radius: 10px;
+            padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.08);
-            border-top: 5px solid {COLORS["primary"]};
         }}
         .level-badge {{
             display: inline-block;
-            padding: 12px 28px;
-            border-radius: 30px;
+            padding: 8px 20px;
+            border-radius: 20px;
             color: white;
-            font-weight: 800;
-            font-size: 1.4rem;
-            margin: 12px 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 8px 0;
         }}
         .footer {{
             margin-top: 3rem;
             padding: 1.5rem 0;
             text-align: center;
             color: {COLORS["muted"]};
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-top: 1px solid {COLORS["border"]};
         }}
         .stButton>button {{
-            background: linear-gradient(135deg, {COLORS["primary"]} 0%, {COLORS["primary_dark"]} 100%);
+            background-color: {COLORS["primary"]};
             color: white;
-            border-radius: 12px;
-            font-weight: 700;
-            height: 52px;
+            border-radius: 8px;
+            font-weight: 600;
+            height: 44px;
             border: none;
-            font-size: 1rem;
         }}
         .stButton>button:hover {{
-            opacity: 0.9;
+            background-color: {COLORS["primary_light"]};
         }}
         .sidebar-logo {{
-            text-align: center;
-            padding: 1rem 0;
+            text-align: left;
+            padding: 0.5rem 0;
         }}
         .sidebar-logo h3 {{
-            color: {COLORS["primary"]};
+            color: {COLORS["text"]};
             margin: 0;
-            font-weight: 800;
+            font-weight: 700;
+            font-size: 1.1rem;
         }}
         .sidebar-logo p {{
             color: {COLORS["muted"]};
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin: 0;
         }}
-        .stForm {{
+        .section-card {{
             background: {COLORS["surface"]};
+            border: 1px solid {COLORS["border"]};
+            border-radius: 10px;
             padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
-        }}
-        .info-card {{
-            background: {COLORS["surface"]};
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.06);
+            margin-bottom: 1rem;
         }}
         </style>
         """,
@@ -263,7 +265,7 @@ def build_input_features(gender: str, vitals: dict, scaler) -> pd.DataFrame:
 def kpi_card(label: str, value: str, accent: str = "primary") -> str:
     accent_color = COLORS.get(accent, COLORS["primary"])
     return f"""
-    <div class="kpi-card" style="border-left-color: {accent_color};">
+    <div class="kpi-card" style="border-left: 4px solid {accent_color};">
         <p class="kpi-value" style="color: {accent_color};">{value}</p>
         <p class="kpi-label">{label}</p>
     </div>
@@ -274,8 +276,8 @@ def home_page():
     st.markdown(
         """
         <div class="hero">
-            <h1>🏥 TRIAGE AI</h1>
-            <p>Hệ thống AI hỗ trợ phân loại mức độ ưu tiên khám bệnh</p>
+            <h1>Triage AI</h1>
+            <p>Hệ thống hỗ trợ phân loại mức độ ưu tiên khám bệnh dựa trên dấu hiệu sinh tồn và mô hình học máy.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -299,7 +301,7 @@ def home_page():
 
     c1, c2 = st.columns([2, 1])
     with c1:
-        st.subheader("Mục tiêu ứng dụng")
+        st.subheader("Mục tiêu")
         st.markdown(
             """
             - Giảm thời gian chờ khám bệnh.
@@ -308,16 +310,20 @@ def home_page():
             """
         )
     with c2:
-        st.image("https://img.icons8.com/color/240/hospital.png", width=160)
+        st.markdown("""
+        <div style="text-align:center; padding-top:1rem;">
+            <img src="https://img.icons8.com/color/240/hospital.png" width="140" alt="Hospital"/>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
-    if st.button("🚀 Bắt đầu dự đoán", use_container_width=True):
-        st.session_state["nav"] = "🩺 Dự đoán bệnh nhân"
+    if st.button("Bắt đầu dự đoán", use_container_width=True):
+        st.session_state["nav"] = "Dự đoán bệnh nhân"
         st.rerun()
 
 
 def predict_page():
-    st.title("🩺 Dự đoán mức độ ưu tiên")
+    st.title("Dự đoán mức độ ưu tiên")
 
     rf_model = load_model("random_forest")
     xgb_model = load_model("xgboost")
@@ -337,10 +343,10 @@ def predict_page():
             systolic_bp = st.number_input("Huyết áp tâm thu (mmHg)", 0, 300, 120)
             diastolic_bp = st.number_input("Huyết áp tâm trương (mmHg)", 0, 200, 80)
 
-        submitted = st.form_submit_button("🔍 DỰ ĐOÁN", use_container_width=True)
+        submitted = st.form_submit_button("DỰ ĐOÁN", use_container_width=True)
 
     if not submitted:
-        st.info("Nhập thông tin bệnh nhân và nhấn **DỰ ĐOÁN** để xem kết quả.")
+        st.info("Nhập thông tin bệnh nhân và nhấn DỰ ĐOÁN để xem kết quả.")
         return
 
     vitals = {
@@ -370,7 +376,7 @@ def predict_page():
         st.markdown(
             f"""
             <div class="prediction-card" style="border-top-color:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])};">
-                <h4>🌲 Random Forest</h4>
+                <h4>Random Forest</h4>
                 <div class="level-badge" style="background:{TRIAGE_COLORS.get(rf_pred, COLORS['primary'])};">
                     Cấp {rf_pred}
                 </div>
@@ -380,12 +386,12 @@ def predict_page():
             """,
             unsafe_allow_html=True,
         )
-        st.progress(float(rf_max), text="Độ tin cậy RF")
+        st.progress(float(rf_max), text="Độ tin cậy")
     with c2:
         st.markdown(
             f"""
             <div class="prediction-card" style="border-top-color:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])};">
-                <h4>⚡ XGBoost</h4>
+                <h4>XGBoost</h4>
                 <div class="level-badge" style="background:{TRIAGE_COLORS.get(xgb_pred, COLORS['primary'])};">
                     Cấp {xgb_pred}
                 </div>
@@ -395,14 +401,14 @@ def predict_page():
             """,
             unsafe_allow_html=True,
         )
-        st.progress(float(xgb_max), text="Độ tin cậy XGB")
+        st.progress(float(xgb_max), text="Độ tin cậy")
     with c3:
         consensus_color = COLORS["success"] if agree else COLORS["danger"]
         consensus_text = "Đồng thuận" if agree else "Không đồng thuận"
         st.markdown(
             f"""
             <div class="prediction-card" style="border-top-color:{consensus_color};">
-                <h4>🤝 {consensus_text}</h4>
+                <h4>{consensus_text}</h4>
                 <div class="level-badge" style="background:{consensus_color};">
                     {'Có' if agree else 'Không'}
                 </div>
@@ -437,7 +443,7 @@ def predict_page():
     st.pyplot(fig)
 
     st.markdown("---")
-    st.subheader("Yếu tố ảnh hưởng đến dự đoán")
+    st.subheader("Yếu tố ảnh hưởng")
     importance_df = pd.DataFrame({
         "Feature": rf_model.feature_names_in_,
         "Importance": rf_model.feature_importances_,
@@ -453,7 +459,7 @@ def predict_page():
 
 
 def compare_page():
-    st.title("📊 So sánh mô hình")
+    st.title("So sánh mô hình")
 
     metrics = pd.DataFrame({
         "Metric": ["Accuracy", "Precision", "Recall", "F1", "ROC-AUC"],
@@ -475,7 +481,7 @@ def compare_page():
 
 
 def data_page():
-    st.title("📈 Thống kê dữ liệu")
+    st.title("Thống kê dữ liệu")
 
     raw_path = BASE_DIR / "data" / "raw" / "augmented_ktas.csv"
     if raw_path.exists():
@@ -528,7 +534,7 @@ def data_page():
 
 
 def explain_page():
-    st.title("🔍 Explainable AI")
+    st.title("Explainable AI")
     st.markdown("Giải thích đóng góp của các đặc trưng trong dự đoán mô hình.")
 
     summary_path = REPORT_DIR / "shap_summary.png"
@@ -563,7 +569,7 @@ def explain_page():
 
 
 def about_page():
-    st.title("ℹ️ Giới thiệu")
+    st.title("Giới thiệu")
 
     st.subheader("Thành viên nhóm")
     members = pd.DataFrame({
@@ -593,14 +599,14 @@ def render_sidebar():
     st.markdown(
         """
         <div class="sidebar-logo">
-            <h3>🏥 Triage AI</h3>
+            <h3>Triage AI</h3>
             <p>v1.0 · Đồ án AI</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
     st.markdown("---")
-    with st.expander("👥 Thông tin nhóm"):
+    with st.expander("Thông tin nhóm"):
         st.markdown(
             """
             - Đặng Hoàng Ân
@@ -611,8 +617,7 @@ def render_sidebar():
         )
     st.markdown(
         "<div class='sidebar-footer'>"
-        "Hệ thống hỗ trợ xếp thứ tự khám bệnh<br>"
-        "© 2026 Triage AI"
+        "Hệ thống hỗ trợ xếp thứ tự khám bệnh"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -621,7 +626,7 @@ def render_sidebar():
 def render_footer():
     st.markdown(
         "<div class='footer'>"
-        "© 2026 Triage AI · Đồ án Trí tuệ nhân tạo · Phiên bản v1.0"
+        "© 2026 Triage AI · Đồ án Trí tuệ nhân tạo"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -631,12 +636,12 @@ def main():
     local_css()
 
     pages = {
-        "🏠 Trang chủ": home_page,
-        "🩺 Dự đoán bệnh nhân": predict_page,
-        "📊 So sánh mô hình": compare_page,
-        "📈 Thống kê dữ liệu": data_page,
-        "🔍 Explainable AI": explain_page,
-        "ℹ️ Giới thiệu": about_page,
+        "Trang chủ": home_page,
+        "Dự đoán bệnh nhân": predict_page,
+        "So sánh mô hình": compare_page,
+        "Thống kê dữ liệu": data_page,
+        "Explainable AI": explain_page,
+        "Giới thiệu": about_page,
     }
 
     with st.sidebar:
